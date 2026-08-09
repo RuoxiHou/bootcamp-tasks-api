@@ -45,3 +45,4 @@ tenant_id = "84f58ce9-43c8-4932-b908-591a8a3007d3"
 
 terraform_principal_id = "396bf63d-e075-4c64-ae02-e9bc7ab53492"
 
+allowed_ip = "94.208.37.253" # remove this in production, only for testing purposes

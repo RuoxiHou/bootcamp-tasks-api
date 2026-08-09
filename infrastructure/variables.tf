@@ -165,3 +165,9 @@ variable "terraform_principal_id" {
   description = "Object ID of the identity running Terraform."
   type        = string
 }
+
+
+variable "allowed_ip" {
+  description = "Public IP address allowed to access MySQL"
+  type        = string
+} # remove this in production, only for testing purposes

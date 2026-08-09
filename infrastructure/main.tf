@@ -83,9 +83,9 @@ module "mysql" {
   mysql_ha_mode          = var.mysql_ha_mode
   mysql_standby_zone     = var.mysql_standby_zone
 
-  delegated_subnet_id = module.network.mysql_subnet_id
-  private_dns_zone_id = module.network.mysql_private_dns_zone_id
-
+  # delegated_subnet_id = module.network.mysql_subnet_id
+  # private_dns_zone_id = module.network.mysql_private_dns_zone_id
+  allowed_ip = var.allowed_ip # remove this in production, only for testing purposes
   tags = var.tags
 
   depends_on = [module.network]
