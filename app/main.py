@@ -1,23 +1,58 @@
+import json
+from redis_client import redis_client
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
-
 from sqlalchemy.orm import Session
-
 from database import Base, engine, get_db
 from models import TaskDB
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Tasks API",
     description="Bootcamp demo app — Week 1/2/8",
 )
 
-
 # Create database tables when the application starts.
-# For this first version we use SQLAlchemy directly.
-# Later we can replace this with Alembic migrations.
+# For this first version I use SQLAlchemy directly.
+# Later I'll replace this with Alembic migrations.
 Base.metadata.create_all(bind=engine)
+
+
+def invalidate_tasks_cache():
+    """Attempt to remove the tasks list cache and log the outcome.
+
+    Uses DEL first; if it reports 0 keys removed also try UNLINK
+    (non-blocking) to cover any Redis server semantics.
+    """
+    key = "tasks:all"
+    try:
+        deleted = redis_client.delete(key)
+        if deleted:
+            logger.info("Cache invalidated: deleted %s key(s) for %s", deleted, key)
+            return
+        # If DEL returned 0, try UNLINK as a fallback (non-blocking removal)
+        try:
+            unlinked = redis_client.unlink(key)
+            logger.info("Cache invalidated via UNLINK: %s for %s", unlinked, key)
+            return
+        except Exception as e:
+            logger.debug("UNLINK failed for %s: %s", key, e)
+        # Final check: log whether key still exists
+        try:
+            exists = redis_client.exists(key)
+            logger.info("Post-invalidation existence for %s: %s", key, exists)
+        except Exception:
+            logger.debug("Could not check existence of %s", key)
+    except Exception as e:
+        logger.warning("Failed to invalidate tasks cache: %s", e)
 
 
 class Task(BaseModel):
@@ -41,9 +76,21 @@ def health():
 
 @app.get("/tasks", response_model=List[TaskOut])
 def list_tasks(db: Session = Depends(get_db)):
+    cache_key = "tasks:all"
+
+    # Check Redis first
+    cached_tasks = redis_client.get(cache_key)
+
+    if cached_tasks:
+        logger.info("CACHE HIT: /tasks")
+        return json.loads(cached_tasks)
+
+    logger.info("CACHE MISS: /tasks")
+
+    # Cache miss -> query MySQL
     tasks = db.query(TaskDB).all()
 
-    return [
+    result = [
         {
             "id": task.id,
             "title": task.title,
@@ -53,6 +100,15 @@ def list_tasks(db: Session = Depends(get_db)):
         }
         for task in tasks
     ]
+
+    # Store in Redis for 60 seconds
+    redis_client.set(
+        cache_key,
+        json.dumps(result),
+        ex=60,
+    )
+
+    return result
 
 
 @app.post("/tasks", response_model=TaskOut, status_code=201)
@@ -70,6 +126,9 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+
+    # Invalidate cached task list
+    invalidate_tasks_cache()
 
     return {
         "id": db_task.id,
@@ -124,6 +183,9 @@ def update_task(
     db.commit()
     db.refresh(db_task)
 
+    # Invalidate cached task list
+    invalidate_tasks_cache()
+
     return {
         "id": db_task.id,
         "title": db_task.title,
@@ -148,5 +210,8 @@ def delete_task(
 
     db.delete(db_task)
     db.commit()
+
+    # Invalidate cached task list
+    invalidate_tasks_cache()
 
     return None
