@@ -16,6 +16,10 @@ resource "azurerm_kubernetes_cluster" "project3" {
     type = "SystemAssigned"
   }
 
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
+  }
+
   default_node_pool {
     name = "system"
 

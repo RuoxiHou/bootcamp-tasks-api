@@ -38,3 +38,13 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "key_vault_id" {
+  description = "Resource ID of the Key Vault containing application secrets"
+  type        = string
+}
+
+variable "project_name" {
+  description = "Project name used for resource naming"
+  type        = string
+}

@@ -1,0 +1,28 @@
+# Kubernetes manifests and generated files
+*.yaml
+*.yml
+*.json
+
+# Kustomize build output
+.kustomization-cache/
+
+# Helm generated packages
+*.tgz
+
+# Kubectl plugin caches
+.kubectl/
+
+# Kubernetes secret output
+secrets.yaml
+secret-*.yaml
+
+# Local tooling state
+.kubectl/
+.env
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

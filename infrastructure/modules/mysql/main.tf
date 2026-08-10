@@ -8,8 +8,8 @@ resource "azurerm_mysql_flexible_server" "project3" {
   administrator_login    = var.administrator_login
   administrator_password = var.administrator_password
 
-# delegated_subnet_id = var.delegated_subnet_id
-# private_dns_zone_id = var.private_dns_zone_id
+  delegated_subnet_id = var.delegated_subnet_id
+  private_dns_zone_id = var.private_dns_zone_id
 
   sku_name = var.mysql_sku_name
 
@@ -33,18 +33,8 @@ resource "azurerm_mysql_flexible_server" "project3" {
   tags = var.tags
 }
 
-# Remove this in production, only for testing purposes
-resource "azurerm_mysql_flexible_server_firewall_rule" "local_pc" {
-  name                = "allow-local-pc"
-  resource_group_name = var.resource_group_name
-  server_name         = azurerm_mysql_flexible_server.project3.name
-
-  start_ip_address = var.allowed_ip
-  end_ip_address   = var.allowed_ip
-}
-
 resource "azurerm_mysql_flexible_database" "project3" {
-  name      = var.database_name
+  name                = var.database_name
   server_name         = azurerm_mysql_flexible_server.project3.name
   resource_group_name = var.resource_group_name
 

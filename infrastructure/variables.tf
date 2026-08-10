@@ -4,6 +4,12 @@ variable "subscription_id" {
   sensitive   = true
 }
 
+variable "student_name" {
+  description = "Student name used for resource naming."
+  type        = string
+  default     = "ruoxi"
+}
+
 variable "location" {
   description = "Primary Azure region."
   type        = string
@@ -20,7 +26,7 @@ variable "resource_group_name" {
 variable "project_name" {
   description = "Short project name used in resource naming."
   type        = string
-  default     = "project3-ruoxi"
+  default     = "project3"
 }
 
 
@@ -165,9 +171,3 @@ variable "terraform_principal_id" {
   description = "Object ID of the identity running Terraform."
   type        = string
 }
-
-
-variable "allowed_ip" {
-  description = "Public IP address allowed to access MySQL"
-  type        = string
-} # remove this in production, only for testing purposes

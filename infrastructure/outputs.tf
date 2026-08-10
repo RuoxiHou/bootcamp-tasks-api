@@ -58,3 +58,15 @@ output "key_vault_uri" {
 output "key_vault_private_endpoint_id" {
   value = module.keyvault.private_endpoint_id
 }
+
+output "workload_identity_principal_id" {
+  value = module.aks.workload_identity_principal_id
+}
+
+output "workload_identity_client_id" {
+  value = module.aks.workload_identity_client_id
+}
+
+output "acr_id" {
+  value = module.acr.id
+}

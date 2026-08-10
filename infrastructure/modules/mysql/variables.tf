@@ -28,13 +28,13 @@ variable "database_name" {
   type = string
 }
 
-#variable "delegated_subnet_id" {
-#  type = string
-#}
+variable "delegated_subnet_id" {
+  type = string
+}
 
-#variable "private_dns_zone_id" {
-#  type = string
-#}
+variable "private_dns_zone_id" {
+  type = string
+}
 
 variable "tags" {
   type    = map(string)
@@ -71,10 +71,4 @@ variable "mysql_standby_zone" {
   type     = string
   default  = null
   nullable = true
-}
-
-# Remove this in production, only for testing purposes
-variable "allowed_ip" {
-  description = "Public IPv4 address allowed to connect to MySQL"
-  type        = string
 }

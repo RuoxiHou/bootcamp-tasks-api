@@ -17,3 +17,7 @@ output "private_endpoint_subnet_id" {
 output "mysql_private_dns_zone_id" {
   value = azurerm_private_dns_zone.mysql.id
 }
+
+output "redis_private_dns_zone_id" {
+  value = azurerm_private_dns_zone.redis.id
+}
