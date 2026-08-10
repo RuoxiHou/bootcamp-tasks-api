@@ -1,3 +1,15 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source = "hashicorp/azurerm"
+    }
+
+    azapi = {
+      source = "Azure/azapi"
+    }
+  }
+}
+
 resource "azurerm_kubernetes_cluster" "project3" {
   name                = var.name
   location            = var.location

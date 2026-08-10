@@ -87,8 +87,8 @@ module "mysql" {
 
   delegated_subnet_id = module.network.mysql_subnet_id
   private_dns_zone_id = module.network.mysql_private_dns_zone_id
-  
-  tags       = var.tags
+
+  tags = var.tags
 
   depends_on = [module.network]
 }
