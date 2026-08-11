@@ -18,6 +18,10 @@ output "aks_oidc_issuer_url" {
   value = module.aks.oidc_issuer_url
 }
 
+output "mysql_admin_username" {
+  value = var.mysql_admin_username
+}
+
 output "mysql_fqdn" {
   value = module.mysql.fqdn
 }
@@ -65,6 +69,11 @@ output "workload_identity_principal_id" {
 
 output "workload_identity_client_id" {
   value = module.aks.workload_identity_client_id
+}
+
+output "tenant_id" {
+  value     = var.tenant_id
+  sensitive = true
 }
 
 output "acr_id" {

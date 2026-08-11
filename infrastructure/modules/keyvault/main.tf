@@ -20,10 +20,49 @@ resource "azurerm_key_vault_secret" "mysql_password" {
   name         = "mysql-admin-password"
   value        = var.mysql_admin_password
   key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
 
-  depends_on = [
-    azurerm_role_assignment.terraform_admin
-  ]
+resource "azurerm_key_vault_secret" "mysql_fqdn" {
+  name         = "mysql-fqdn"
+  value        = var.mysql_fqdn
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "mysql_database_name" {
+  name         = "mysql-database-name"
+  value        = var.mysql_database_name
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "mysql_admin_username" {
+  name         = "mysql-admin-username"
+  value        = var.mysql_admin_username
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "redis_hostname" {
+  name         = "redis-hostname"
+  value        = var.redis_hostname
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "redis_port" {
+  name         = "redis-port"
+  value        = var.redis_port
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "redis_password" {
+  name         = "redis-password"
+  value        = var.redis_primary_access_key
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
 }
 
 resource "azurerm_private_dns_zone" "project3" {

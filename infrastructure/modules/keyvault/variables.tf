@@ -51,3 +51,35 @@ variable "mysql_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "mysql_fqdn" {
+  description = "MySQL server FQDN."
+  type        = string
+}
+
+variable "mysql_database_name" {
+  description = "MySQL database name."
+  type        = string
+}
+
+variable "mysql_admin_username" {
+  description = "MySQL admin username."
+  type        = string
+}
+
+variable "redis_hostname" {
+  description = "Redis hostname."
+  type        = string
+}
+
+variable "redis_port" {
+  description = "Redis port as string."
+  type        = string
+  default     = "10000"
+}
+
+variable "redis_primary_access_key" {
+  description = "Redis primary access key."
+  type        = string
+  sensitive   = true
+}

@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: tasks-api
+  namespace: default
+  labels:
+    app: tasks-api
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: tasks-api
+
+  template:
+    metadata:
+      labels:
+        app: tasks-api
+        azure.workload.identity/use: "true"
+
+    spec:
+      serviceAccountName: tasks-api
+
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+          effect: NoSchedule
+
+      containers:
+        - name: tasks-api
+
+          image: project3ruoxiacr.azurecr.io/tasks-api:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          env:
+            # MySQL configuration
+            - name: MYSQL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: tasks-api-config-secret
+                  key: MYSQL_HOST
+
+            - name: MYSQL_PORT
+              value: "3306"
+
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: tasks-api-config-secret
+                  key: MYSQL_DATABASE
+
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: tasks-api-config-secret
+                  key: MYSQL_USER
+
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
+
+            # Redis configuration
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: tasks-api-config-secret
+                  key: REDIS_HOST
+
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: tasks-api-config-secret
+                  key: REDIS_PORT
+
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: tasks-api-secrets

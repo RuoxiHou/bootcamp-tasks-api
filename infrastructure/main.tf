@@ -24,9 +24,17 @@ module "keyvault" {
 
   mysql_admin_password = var.mysql_admin_password
 
+  mysql_fqdn           = module.mysql.fqdn
+  mysql_database_name  = module.mysql.database_name
+  mysql_admin_username = var.mysql_admin_username
+
+  redis_hostname           = module.redis.hostname
+  redis_port               = tostring(coalesce(module.redis.port, 10000))
+  redis_primary_access_key = module.redis.primary_access_key
+
   tags = var.tags
 
-  depends_on = [module.network]
+  depends_on = [module.network, module.mysql, module.redis]
 }
 
 module "network" {

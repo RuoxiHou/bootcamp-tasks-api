@@ -6,8 +6,8 @@ resource "azurerm_user_assigned_identity" "workload" {
   tags = var.tags
 }
 
-resource "azurerm_federated_identity_credential" "redis" {
-  name                = "${var.project_name}-redis-federated"
+resource "azurerm_federated_identity_credential" "tasks_api" {
+  name                = "${var.project_name}-tasks-api-federated"
   resource_group_name = var.resource_group_name
 
   parent_id = azurerm_user_assigned_identity.workload.id
@@ -18,7 +18,7 @@ resource "azurerm_federated_identity_credential" "redis" {
 
   issuer = azurerm_kubernetes_cluster.project3.oidc_issuer_url
 
-  subject = "system:serviceaccount:default:python-redis-test"
+  subject = "system:serviceaccount:default:tasks-api"
 }
 
 resource "azurerm_role_assignment" "workload_keyvault" {
