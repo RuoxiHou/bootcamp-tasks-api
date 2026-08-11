@@ -61,6 +61,8 @@ module "aks" {
 
   key_vault_id = module.keyvault.id
 
+  dns_zone_id = module.dns.id
+
   kubernetes_version = null
 
   node_count = var.aks_node_count
@@ -72,7 +74,7 @@ module "aks" {
 
   tags = var.tags
 
-  depends_on = [module.network, module.keyvault]
+  depends_on = [module.network, module.keyvault, module.dns]
 }
 
 module "mysql" {
@@ -142,3 +144,17 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   role_definition_name = "AcrPull"
   principal_id         = module.aks.kubelet_identity_object_id
 }
+
+module "dns" {
+  source = "./modules/dns"
+
+  domain_name         = var.domain_name
+  resource_group_name = module.resource_group.name
+
+  tags = var.tags
+
+  depends_on = [
+    module.resource_group
+  ]
+}
+

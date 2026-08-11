@@ -48,3 +48,8 @@ variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
 }
+
+variable "dns_zone_id" {
+  description = "ID of the Azure DNS zone managed by ExternalDNS"
+  type        = string
+}

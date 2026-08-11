@@ -37,18 +37,33 @@ fi
 KEY_VAULT_NAME="$(terraform -chdir="$INFRA_DIR" output -raw key_vault_name)"
 WORKLOAD_IDENTITY_CLIENT_ID="$(terraform -chdir="$INFRA_DIR" output -raw workload_identity_client_id)"
 AZURE_TENANT_ID="$(terraform -chdir="$INFRA_DIR" output -raw tenant_id)"
+AZURE_SUBSCRIPTION_ID="$(terraform -chdir="$INFRA_DIR" output -raw subscription_id)"
+EXTERNALDNS_CLIENT_ID="$(terraform -chdir="$INFRA_DIR" output -raw externaldns_client_id)"
+AZURE_DNS_RESOURCE_GROUP="$(terraform -chdir="$INFRA_DIR" output -raw resource_group_name)"
 
 export KEY_VAULT_NAME
 export WORKLOAD_IDENTITY_CLIENT_ID
 export AZURE_TENANT_ID
+export AZURE_SUBSCRIPTION_ID
+export EXTERNALDNS_CLIENT_ID
+export AZURE_DNS_RESOURCE_GROUP
 
 # Apply resources in dependency order.
 envsubst < "$K8S_BASE_DIR/tasks-api-serviceaccount.yaml" | kubectl apply -f -
 envsubst < "$K8S_BASE_DIR/tasks-api-secret-provider.yaml" | kubectl apply -f -
+
 kubectl apply -f "$K8S_BASE_DIR/tasks-api-service.yaml"
 kubectl apply -f "$K8S_BASE_DIR/tasks-api-deployment.yaml"
 kubectl apply -f "$K8S_BASE_DIR/tasks-api-gateway.yaml"
 kubectl apply -f "$K8S_BASE_DIR/tasks-api-httproute.yaml"
+
+kubectl apply -f "$K8S_BASE_DIR/external-dns-rbac.yaml"
+envsubst < "$K8S_BASE_DIR/external-dns-serviceaccount.yaml" | kubectl apply -f -
+envsubst < "$K8S_BASE_DIR/external-dns-azure-config.yaml" | kubectl apply -f -
+envsubst < "$K8S_BASE_DIR/external-dns.yaml" | kubectl apply -f -
+
+
+kubectl rollout status deployment/external-dns -n default --timeout=180s
 
 kubectl rollout status deployment/tasks-api -n default --timeout=180s
 

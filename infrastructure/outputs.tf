@@ -76,6 +76,23 @@ output "tenant_id" {
   sensitive = true
 }
 
+output "subscription_id" {
+  value = var.subscription_id
+  sensitive = true
+}
+
+output "externaldns_client_id" {
+  value = module.aks.externaldns_client_id
+}
+
 output "acr_id" {
   value = module.acr.id
+}
+
+output "dns_zone_name" {
+  value = module.dns.name
+}
+
+output "dns_name_servers" {
+  value = module.dns.name_servers
 }

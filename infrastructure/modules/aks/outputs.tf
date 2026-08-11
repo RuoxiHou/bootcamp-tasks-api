@@ -31,3 +31,13 @@ output "workload_identity_principal_id" {
   description = "Principal ID of the AKS workload identity"
   value       = azurerm_user_assigned_identity.workload.principal_id
 }
+
+output "externaldns_client_id" {
+  description = "Client ID of the ExternalDNS workload identity"
+  value       = azurerm_user_assigned_identity.externaldns.client_id
+}
+
+output "externaldns_principal_id" {
+  description = "Principal ID of the ExternalDNS workload identity"
+  value       = azurerm_user_assigned_identity.externaldns.principal_id
+}

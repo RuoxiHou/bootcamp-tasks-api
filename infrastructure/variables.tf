@@ -171,3 +171,9 @@ variable "terraform_principal_id" {
   description = "Object ID of the identity running Terraform."
   type        = string
 }
+
+
+variable "domain_name" {
+  description = "Public domain name managed by Azure DNS"
+  type        = string
+}

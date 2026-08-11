@@ -6,6 +6,9 @@ metadata:
   namespace: default
 
 spec:
+  hostnames:
+    - api.ruoxi-projects.space
+    
   parentRefs:
     - name: tasks-api-gateway
 
