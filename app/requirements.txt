@@ -10,6 +10,7 @@ redis==6.4.0
 
 # Prometheus metrics
 prometheus-fastapi-instrumentator==7.1.0
+prometheus-client==0.17.1
 
 # JSON structured logging
 python-json-logger==3.3.0

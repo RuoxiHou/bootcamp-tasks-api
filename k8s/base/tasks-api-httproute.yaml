@@ -45,3 +45,11 @@ spec:
       backendRefs:
         - name: tasks-api
           port: 8000
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /metrics
+      backendRefs:
+        - name: tasks-api
+          port: 8000

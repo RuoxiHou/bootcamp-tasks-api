@@ -1,11 +1,22 @@
 import json
+import time
+
 from redis_client import redis_client
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from database import Base, engine, get_db
 from models import TaskDB
+
+from prometheus_client import generate_latest
+from starlette.responses import Response
+
+from metrics import (
+    HTTP_REQUESTS_TOTAL,
+    HTTP_REQUEST_DURATION_SECONDS,
+)
+
 import logging
 
 logging.basicConfig(
@@ -19,6 +30,46 @@ app = FastAPI(
     title="Tasks API",
     description="Bootcamp demo app — Week 1/2/8",
 )
+
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    
+    if request.url.path == "/metrics":
+        return await call_next(request)
+
+    start_time = time.perf_counter()
+
+    response = await call_next(request)
+
+    duration = time.perf_counter() - start_time
+
+    path = request.url.path
+    method = request.method
+    status = str(response.status_code)
+
+    HTTP_REQUESTS_TOTAL.labels(
+        method=method,
+        path=path,
+        status=status,
+    ).inc()
+
+    HTTP_REQUEST_DURATION_SECONDS.labels(
+        method=method,
+        path=path,
+        status=status,
+    ).observe(duration)
+
+    return response
+
+
+@app.get("/metrics")
+async def metrics():
+    return Response(
+        content=generate_latest(),
+        media_type="text/plain; version=0.0.4",
+    )
+
 
 # Create database tables when the application starts.
 # For this first version I use SQLAlchemy directly.
