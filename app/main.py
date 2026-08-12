@@ -1,21 +1,32 @@
+import os
 import json
 import time
 
-from redis_client import redis_client
 from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from database import Base, engine, get_db
-from models import TaskDB
 
 from prometheus_client import generate_latest
 from starlette.responses import Response
 
-from metrics import (
-    HTTP_REQUESTS_TOTAL,
-    HTTP_REQUEST_DURATION_SECONDS,
-)
+try:
+    from .redis_client import redis_client
+    from .database import Base, get_db, get_engine
+    from .models import TaskDB
+    from .metrics import (
+        HTTP_REQUESTS_TOTAL,
+        HTTP_REQUEST_DURATION_SECONDS,
+    )
+except ImportError:
+    # Allow running as module "main" inside the container image.
+    from redis_client import redis_client
+    from database import Base, get_db, get_engine
+    from models import TaskDB
+    from metrics import (
+        HTTP_REQUESTS_TOTAL,
+        HTTP_REQUEST_DURATION_SECONDS,
+    )
 
 import logging
 
@@ -34,7 +45,7 @@ app = FastAPI(
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
-    
+    # otherwise scraping /metrics would itself generate another HTTP request metric.
     if request.url.path == "/metrics":
         return await call_next(request)
 
@@ -71,10 +82,19 @@ async def metrics():
     )
 
 
-# Create database tables when the application starts.
-# For this first version I use SQLAlchemy directly.
-# Later I'll replace this with Alembic migrations.
-Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def on_startup():
+    if os.environ.get("TESTING") == "1":
+        return
+
+    try:
+        engine = get_engine()
+    except KeyError:
+        logger.warning("DATABASE_URL not set; skipping database initialization")
+        return
+
+    # Create tables only when a real database is configured.
+    Base.metadata.create_all(bind=engine)
 
 
 def invalidate_tasks_cache():

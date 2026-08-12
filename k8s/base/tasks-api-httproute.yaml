@@ -53,3 +53,11 @@ spec:
       backendRefs:
         - name: tasks-api
           port: 8000
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /health
+      backendRefs:
+        - name: tasks-api
+          port: 8000
