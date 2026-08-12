@@ -36,7 +36,7 @@ spec:
             - --provider=azure
             - --azure-resource-group=${AZURE_DNS_RESOURCE_GROUP}
             - --azure-subscription-id=${AZURE_SUBSCRIPTION_ID}
-            - --domain-filter=ruoxi-projects.space
+            - --domain-filter=${DNS_ZONE_NAME}
             - --registry=txt
             - --txt-owner-id=project3
             - --log-level=info
@@ -47,6 +47,15 @@ spec:
 
             - name: AZURE_SUBSCRIPTION_ID
               value: "${AZURE_SUBSCRIPTION_ID}"
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+              ephemeral-storage: 50Mi
+            limits:
+              memory: 128Mi
+              ephemeral-storage: 100Mi
 
           volumeMounts:
             - name: azure-config
