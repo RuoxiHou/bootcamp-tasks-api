@@ -17,6 +17,10 @@ env:
   NAMESPACE: default
 
 jobs:
+
+  # ============================================================
+  # CI + SONARQUBE
+  # ============================================================
   test-and-sonarqube:
     name: Test and SonarQube
     runs-on: self-hosted
@@ -55,6 +59,9 @@ jobs:
             -Dsonar.token="$SONAR_TOKEN"
 
 
+  # ============================================================
+  # BUILD + PUSH TO ACR
+  # ============================================================
   build-and-push:
     name: Build and Push Docker Image
     runs-on: self-hosted
@@ -87,6 +94,9 @@ jobs:
           docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:dev"
 
 
+  # ============================================================
+  # DEPLOY TO AKS
+  # ============================================================
   deploy:
     name: Deploy to AKS
     runs-on: self-hosted
@@ -111,18 +121,116 @@ jobs:
         run: |
           kubectl get nodes
 
+      # ----------------------------------------------------------
+      # Deploy new image
+      # ----------------------------------------------------------
       - name: Deploy image to AKS
         run: |
-          kubectl -n "$NAMESPACE" set image deployment/tasks-api \
-            tasks-api="$ACR_LOGIN_SERVER/$IMAGE_NAME:${GITHUB_SHA}"
+          IMAGE="$ACR_LOGIN_SERVER/$IMAGE_NAME:${GITHUB_SHA}"
 
+          echo "Deploying image:"
+          echo "$IMAGE"
+
+          kubectl -n "$NAMESPACE" set image deployment/tasks-api \
+            tasks-api="$IMAGE"
+
+      # ----------------------------------------------------------
+      # Wait for rollout
+      # ----------------------------------------------------------
       - name: Wait for rollout
         run: |
-          kubectl -n "$NAMESPACE" rollout status \
-            deployment/tasks-api \
-            --timeout=5m
+          echo "Waiting for deployment rollout..."
 
+          if kubectl -n "$NAMESPACE" rollout status \
+              deployment/tasks-api \
+              --timeout=5m; then
+
+            echo "Deployment rollout successful."
+
+          else
+
+            echo "Deployment rollout FAILED."
+            echo "Starting automatic rollback..."
+
+            echo ""
+            echo "===== Deployment ====="
+            kubectl -n "$NAMESPACE" get deployment tasks-api -o wide
+
+            echo ""
+            echo "===== Pods ====="
+            kubectl -n "$NAMESPACE" get pods \
+              -l app=tasks-api \
+              -o wide
+
+            echo ""
+            echo "===== Recent Events ====="
+            kubectl -n "$NAMESPACE" get events \
+              --sort-by='.lastTimestamp' | tail -30
+
+            echo ""
+            echo "===== Rollout History ====="
+            kubectl -n "$NAMESPACE" rollout history deployment/tasks-api
+
+            echo ""
+            echo "===== Rolling back ====="
+
+            kubectl -n "$NAMESPACE" rollout undo deployment/tasks-api
+
+            echo ""
+            echo "Waiting for rollback to complete..."
+
+            if kubectl -n "$NAMESPACE" rollout status \
+                deployment/tasks-api \
+                --timeout=5m; then
+
+              echo "Rollback completed successfully."
+
+            else
+
+              echo "CRITICAL: Rollback also failed."
+
+              echo ""
+              echo "===== Deployment after rollback ====="
+              kubectl -n "$NAMESPACE" get deployment tasks-api -o wide
+
+              echo ""
+              echo "===== Pods after rollback ====="
+              kubectl -n "$NAMESPACE" get pods \
+                -l app=tasks-api \
+                -o wide
+
+              echo ""
+              echo "===== Deployment description ====="
+              kubectl -n "$NAMESPACE" describe deployment tasks-api
+
+              exit 1
+            fi
+
+            # Important:
+            # Even though the old version was successfully restored,
+            # the new deployment failed, so GitHub Actions must be red.
+            exit 1
+          fi
+
+      # ----------------------------------------------------------
+      # Verify successful deployment
+      # ----------------------------------------------------------
       - name: Verify deployment
         run: |
-          kubectl -n "$NAMESPACE" get pods -l app=tasks-api
-          kubectl -n "$NAMESPACE" get deployment tasks-api
+          echo "===== Pods ====="
+          kubectl -n "$NAMESPACE" get pods \
+            -l app=tasks-api \
+            -o wide
+
+          echo ""
+          echo "===== Deployment ====="
+          kubectl -n "$NAMESPACE" get deployment tasks-api -o wide
+
+          echo ""
+          echo "===== Current image ====="
+          kubectl -n "$NAMESPACE" get deployment tasks-api \
+            -o jsonpath='{.spec.template.spec.containers[0].image}'
+
+          echo ""
+          echo "===== Rollout history ====="
+          kubectl -n "$NAMESPACE" rollout history deployment/tasks-api

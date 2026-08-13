@@ -122,6 +122,12 @@ resource "azurerm_role_assignment" "aks_cluster_user" {
   principal_id         = azurerm_linux_virtual_machine.ci_runner.identity[0].principal_id
 }
 
+resource "azurerm_role_assignment" "aks_rbac_writer" {
+  scope                = var.aks_id
+  role_definition_name = "Azure Kubernetes Service RBAC Writer"
+  principal_id         = azurerm_linux_virtual_machine.ci_runner.identity[0].principal_id
+}
+
 resource "azurerm_role_assignment" "key_vault_secrets_user" {
   scope                = var.key_vault_id
   role_definition_name = "Key Vault Secrets User"

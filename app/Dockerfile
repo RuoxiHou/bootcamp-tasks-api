@@ -12,8 +12,8 @@ COPY redis_client.py .
 COPY entrypoint.sh .
 COPY metrics.py .
 
-RUN chmod +x /app/entrypoint.sh \
-    && useradd --system --no-create-home --uid 10001 taskly
+RUN chmod +x /app/entrypoint.sh && \
+    useradd --system --no-create-home --uid 10001 taskly
 
 USER taskly
 
