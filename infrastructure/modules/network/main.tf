@@ -83,6 +83,14 @@ resource "azurerm_subnet" "private_endpoints" {
   private_endpoint_network_policies = "Disabled"
 }
 
+resource "azurerm_subnet" "ci" {
+  name                 = "snet-ci"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.project3.name
+
+  address_prefixes = var.ci_subnet_prefix
+}
+
 resource "azurerm_private_dns_zone" "mysql" {
   name                = "privatelink.mysql.database.azure.com"
   resource_group_name = var.resource_group_name

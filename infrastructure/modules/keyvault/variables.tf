@@ -83,3 +83,27 @@ variable "redis_primary_access_key" {
   type        = string
   sensitive   = true
 }
+
+variable "github_runner_pat" {
+  description = "GitHub PAT to store in Key Vault for CI runner bootstrap."
+  type        = string
+  sensitive   = true
+}
+
+variable "github_runner_pat_secret_name" {
+  description = "Key Vault secret name for the GitHub runner PAT."
+  type        = string
+  default     = "github-runner-pat"
+}
+
+variable "sonarqube_db_password" {
+  description = "SonarQube database password to store in Key Vault."
+  type        = string
+  sensitive   = true
+}
+
+variable "sonarqube_db_password_secret_name" {
+  description = "Key Vault secret name for the SonarQube DB password."
+  type        = string
+  default     = "sonarqube-db-password"
+}

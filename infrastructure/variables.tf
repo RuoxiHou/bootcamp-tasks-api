@@ -54,6 +54,12 @@ variable "private_endpoint_subnet_prefix" {
   default     = ["10.10.3.0/24"]
 }
 
+variable "ci_subnet_prefix" {
+  description = "CI/CD runner subnet."
+  type        = list(string)
+  default     = ["10.10.4.0/24"]
+}
+
 variable "aks_node_count" {
   description = "Number of AKS system nodes."
   type        = number
@@ -177,3 +183,55 @@ variable "domain_name" {
   description = "Public domain name managed by Azure DNS"
   type        = string
 }
+
+variable "ssh_public_key" {
+  description = "SSH public key for CI runner VM authentication."
+  type        = string
+  sensitive   = true
+}
+
+variable "admin_source_ip" {
+  description = "Admin source IP for SSH and SonarQube access (CIDR)."
+  type        = string
+}
+
+variable "github_org" {
+  description = "GitHub organization/owner name."
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name."
+  type        = string
+}
+
+variable "github_runner_pat_secret_name" {
+  description = "Key Vault secret name containing a GitHub token for runner registration."
+  type        = string
+  default     = "github-runner-pat"
+}
+
+variable "github_runner_pat" {
+  description = "GitHub PAT value that Terraform stores in Key Vault for runner bootstrap."
+  type        = string
+  sensitive   = true
+}
+
+variable "sonarqube_db_password" {
+  description = "Stable SonarQube database password stored in Key Vault and consumed by the CI runner bootstrap."
+  type        = string
+  sensitive   = true
+}
+
+variable "sonarqube_db_password_secret_name" {
+  description = "Key Vault secret name for SonarQube database password."
+  type        = string
+  default     = "sonarqube-db-password"
+}
+
+variable "ci_runner_vm_size" {
+  description = "VM size for the self-hosted CI runner. Defaults to a burstable SKU to avoid DSv5 quota requirements."
+  type        = string
+  default     = "Standard_B2s"
+}
+

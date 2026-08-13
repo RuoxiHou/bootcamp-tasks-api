@@ -32,6 +32,11 @@ module "keyvault" {
   redis_port               = tostring(coalesce(module.redis.port, 10000))
   redis_primary_access_key = module.redis.primary_access_key
 
+  github_runner_pat             = var.github_runner_pat
+  github_runner_pat_secret_name = var.github_runner_pat_secret_name
+  sonarqube_db_password         = var.sonarqube_db_password
+  sonarqube_db_password_secret_name = var.sonarqube_db_password_secret_name
+
   tags = var.tags
 
   depends_on = [module.network, module.mysql, module.redis]
@@ -48,6 +53,7 @@ module "network" {
   aks_subnet_prefix              = var.aks_subnet_prefix
   mysql_subnet_prefix            = var.mysql_subnet_prefix
   private_endpoint_subnet_prefix = var.private_endpoint_subnet_prefix
+  ci_subnet_prefix               = var.ci_subnet_prefix
 
   tags = var.tags
 }
@@ -158,3 +164,41 @@ module "dns" {
   ]
 }
 
+module "ci_runner" {
+  source = "./modules/ci-runner"
+
+  name                = "tasks-ci-runner"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+
+  subnet_id = module.network.ci_subnet_id
+
+  acr_id         = module.acr.id
+  aks_id         = module.aks.id
+  key_vault_id   = module.keyvault.id
+  key_vault_name = module.keyvault.name
+
+  vm_size = var.ci_runner_vm_size
+
+  admin_username = "azureadmin"
+  ssh_public_key = var.ssh_public_key
+
+  admin_source_ip = var.admin_source_ip
+
+  github_org                    = var.github_org
+  github_repo                   = var.github_repo
+  github_runner_pat_secret_name = var.github_runner_pat_secret_name
+  sonarqube_db_password_secret_name = var.sonarqube_db_password_secret_name
+
+  tags = var.tags
+
+  depends_on = [module.network, module.acr, module.aks, module.keyvault]
+}
+
+removed {
+  from = module.github_actions.azuread_application.github_actions
+
+  lifecycle {
+    destroy = false
+  }
+}

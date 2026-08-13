@@ -3,7 +3,7 @@ kind: Deployment
 
 metadata:
   name: tasks-api
-  namespace: default
+  namespace: ${K8S_NAMESPACE}
   labels:
     app: tasks-api
 
@@ -31,7 +31,7 @@ spec:
       containers:
         - name: tasks-api
 
-          image: project3ruoxiacr.azurecr.io/tasks-api:latest
+          image: ${TASKS_API_IMAGE}
           imagePullPolicy: Always
 
           ports:

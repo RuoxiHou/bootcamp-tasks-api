@@ -22,6 +22,10 @@ variable "private_endpoint_subnet_prefix" {
   type = list(string)
 }
 
+variable "ci_subnet_prefix" {
+  type = list(string)
+}
+
 variable "project_name" {
   type    = string
   default = "project3"

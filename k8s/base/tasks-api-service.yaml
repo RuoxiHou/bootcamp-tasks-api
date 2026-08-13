@@ -3,7 +3,7 @@ kind: Service
 
 metadata:
   name: tasks-api
-  namespace: default
+  namespace: ${K8S_NAMESPACE}
 
 spec:
   type: ClusterIP

@@ -65,6 +65,20 @@ resource "azurerm_key_vault_secret" "redis_password" {
   depends_on   = [azurerm_role_assignment.terraform_admin]
 }
 
+resource "azurerm_key_vault_secret" "github_runner_pat" {
+  name         = var.github_runner_pat_secret_name
+  value        = var.github_runner_pat
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
+resource "azurerm_key_vault_secret" "sonarqube_db_password" {
+  name         = var.sonarqube_db_password_secret_name
+  value        = var.sonarqube_db_password
+  key_vault_id = azurerm_key_vault.project3.id
+  depends_on   = [azurerm_role_assignment.terraform_admin]
+}
+
 resource "azurerm_private_dns_zone" "project3" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = var.resource_group_name

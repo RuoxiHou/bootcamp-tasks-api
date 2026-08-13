@@ -77,7 +77,7 @@ output "tenant_id" {
 }
 
 output "subscription_id" {
-  value = var.subscription_id
+  value     = var.subscription_id
   sensitive = true
 }
 
@@ -89,6 +89,14 @@ output "acr_id" {
   value = module.acr.id
 }
 
+output "acr_name" {
+  value = module.acr.name
+}
+
+output "acr_login_server" {
+  value = module.acr.login_server
+}
+
 output "dns_zone_name" {
   value = module.dns.name
 }
@@ -96,3 +104,12 @@ output "dns_zone_name" {
 output "dns_name_servers" {
   value = module.dns.name_servers
 }
+
+output "ci_runner_public_ip" {
+  value = module.ci_runner.public_ip_address
+}
+
+output "ci_runner_sonarqube_url" {
+  value = module.ci_runner.sonarqube_url
+}
+
