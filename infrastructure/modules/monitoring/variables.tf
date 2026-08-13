@@ -47,6 +47,7 @@ variable "grafana_public_url" {
 variable "alert_email_address" {
   description = "Email address that should receive Grafana/Alertmanager notifications."
   type        = string
+  sensitive   = true
 }
 
 variable "alert_smtp_smarthost" {
@@ -58,19 +59,17 @@ variable "alert_smtp_smarthost" {
 variable "alert_email_from" {
   description = "From address used for Alertmanager email notifications."
   type        = string
-  default     = ""
+  sensitive   = true
 }
 
 variable "alert_smtp_auth_username" {
   description = "SMTP username used by Alertmanager for email delivery."
   type        = string
-  default     = ""
   sensitive   = true
 }
 
 variable "alert_smtp_auth_password" {
   description = "SMTP password used by Alertmanager for email delivery."
   type        = string
-  default     = ""
   sensitive   = true
 }

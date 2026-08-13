@@ -143,33 +143,55 @@ variable "mysql_standby_zone" {
 variable "alert_smtp_smarthost" {
   description = "SMTP smarthost used by Alertmanager for email notifications, for example smtp.gmail.com:587."
   type        = string
-  default     = ""
+
+  validation {
+    condition     = trimspace(var.alert_smtp_smarthost) != ""
+    error_message = "alert_smtp_smarthost must not be empty."
+  }
 }
 
 variable "alert_email_from" {
   description = "Sender email address used by Alertmanager notifications."
   type        = string
-  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = trimspace(var.alert_email_from) != ""
+    error_message = "alert_email_from must not be empty."
+  }
 }
 
 variable "alert_email_address" {
   description = "Recipient email address for Alertmanager notifications."
   type        = string
-  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = trimspace(var.alert_email_address) != ""
+    error_message = "alert_email_address must not be empty."
+  }
 }
 
 variable "alert_smtp_auth_username" {
   description = "SMTP username for Alertmanager email notifications."
   type        = string
-  default     = ""
   sensitive   = true
+
+  validation {
+    condition     = trimspace(var.alert_smtp_auth_username) != ""
+    error_message = "alert_smtp_auth_username must not be empty."
+  }
 }
 
 variable "alert_smtp_auth_password" {
   description = "SMTP password or app password for Alertmanager email notifications."
   type        = string
-  default     = ""
   sensitive   = true
+
+  validation {
+    condition     = trimspace(var.alert_smtp_auth_password) != ""
+    error_message = "alert_smtp_auth_password must not be empty."
+  }
 }
 
 variable "redis_sku" {
