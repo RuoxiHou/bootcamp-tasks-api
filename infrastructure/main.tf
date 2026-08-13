@@ -216,3 +216,9 @@ module "monitoring" {
 
   grafana_admin_password = var.grafana_admin_password
 }
+
+module "autoscaling" {
+  source = "./modules/autoscaling"
+
+  depends_on = [module.monitoring, module.aks]
+}
