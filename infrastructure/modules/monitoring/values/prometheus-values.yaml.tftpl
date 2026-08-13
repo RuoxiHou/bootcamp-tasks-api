@@ -1,0 +1,73 @@
+grafana:
+  enabled: true
+
+  defaultDatasourceEnabled: true
+  isDefaultDatasource: true
+
+  persistence:
+    enabled: true
+    size: 5Gi
+
+  service:
+    type: ClusterIP
+
+  sidecar:
+    dashboards:
+      enabled: true
+    datasources:
+      enabled: true
+
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      jsonData:
+        derivedFields:
+          - name: Pod
+            matcherRegex: 'pod="([^\"]+)"'
+            url: ''
+
+prometheus:
+  enabled: true
+
+  additionalServiceMonitors:
+    - name: tasks-api
+      namespaceSelector:
+        matchNames:
+          - ${tasks_api_namespace}
+      selector:
+        matchLabels:
+          app: ${tasks_api_service_name}
+      targetLabels:
+        - app
+      podTargetLabels:
+        - app
+      endpoints:
+        - port: http
+          path: /metrics
+          interval: 15s
+          scrapeTimeout: 10s
+          honorLabels: true
+          filterRunning: true
+
+  prometheusSpec:
+    retention: 15d
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+    podMonitorSelectorNilUsesHelmValues: false
+
+alertmanager:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+prometheus-node-exporter:
+  hostRootFsMount:
+    enabled: true

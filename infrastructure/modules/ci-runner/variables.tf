@@ -41,7 +41,7 @@ variable "admin_source_ip" {
   type        = string
 
   validation {
-    condition = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$", var.admin_source_ip))
+    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}(/([0-9]|[1-2][0-9]|3[0-2]))?$", var.admin_source_ip))
     error_message = "admin_source_ip must be an IPv4 address or IPv4 CIDR, for example 203.0.113.10 or 203.0.113.10/32."
   }
 }

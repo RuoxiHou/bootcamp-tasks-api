@@ -7,7 +7,7 @@ resource "azurerm_user_assigned_identity" "externaldns" {
 }
 
 resource "azurerm_federated_identity_credential" "externaldns" {
-  name                = "${var.project_name}-externaldns-federated"
+  name = "${var.project_name}-externaldns-federated"
 
   user_assigned_identity_id = azurerm_user_assigned_identity.externaldns.id
 
@@ -28,7 +28,7 @@ resource "azurerm_role_assignment" "externaldns_dns" {
 
 # cert-manager DNS01 solver uses the same managed identity via its own federated credential
 resource "azurerm_federated_identity_credential" "certmanager" {
-  name                = "${var.project_name}-certmanager-federated"
+  name = "${var.project_name}-certmanager-federated"
 
   user_assigned_identity_id = azurerm_user_assigned_identity.externaldns.id
 

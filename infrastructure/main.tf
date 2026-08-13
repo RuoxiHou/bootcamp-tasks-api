@@ -32,9 +32,9 @@ module "keyvault" {
   redis_port               = tostring(coalesce(module.redis.port, 10000))
   redis_primary_access_key = module.redis.primary_access_key
 
-  github_runner_pat             = var.github_runner_pat
-  github_runner_pat_secret_name = var.github_runner_pat_secret_name
-  sonarqube_db_password         = var.sonarqube_db_password
+  github_runner_pat                 = var.github_runner_pat
+  github_runner_pat_secret_name     = var.github_runner_pat_secret_name
+  sonarqube_db_password             = var.sonarqube_db_password
   sonarqube_db_password_secret_name = var.sonarqube_db_password_secret_name
 
   tags = var.tags
@@ -185,9 +185,9 @@ module "ci_runner" {
 
   admin_source_ip = var.admin_source_ip
 
-  github_org                    = var.github_org
-  github_repo                   = var.github_repo
-  github_runner_pat_secret_name = var.github_runner_pat_secret_name
+  github_org                        = var.github_org
+  github_repo                       = var.github_repo
+  github_runner_pat_secret_name     = var.github_runner_pat_secret_name
   sonarqube_db_password_secret_name = var.sonarqube_db_password_secret_name
 
   tags = var.tags
@@ -201,4 +201,18 @@ removed {
   lifecycle {
     destroy = false
   }
+}
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  cluster_name           = module.aks.name
+  namespace              = "monitoring"
+  tasks_api_namespace    = "default"
+  tasks_api_service_name = "tasks-api"
+
+  prometheus_storage_size = "10Gi"
+  loki_storage_size       = "20Gi"
+
+  grafana_admin_password = var.grafana_admin_password
 }

@@ -44,7 +44,13 @@ resource "azurerm_kubernetes_cluster" "project3" {
 
     vnet_subnet_id = var.subnet_id
 
-    only_critical_addons_enabled = true
+    only_critical_addons_enabled = false
+
+    upgrade_settings {
+      drain_timeout_in_minutes      = 0
+      max_surge                     = "10%"
+      node_soak_duration_in_minutes = 0
+    }
   }
 
   network_profile {

@@ -7,7 +7,7 @@ resource "azurerm_user_assigned_identity" "workload" {
 }
 
 resource "azurerm_federated_identity_credential" "tasks_api" {
-  name                = "${var.project_name}-tasks-api-federated"
+  name = "${var.project_name}-tasks-api-federated"
 
   user_assigned_identity_id = azurerm_user_assigned_identity.workload.id
 

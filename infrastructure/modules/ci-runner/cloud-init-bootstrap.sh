@@ -161,7 +161,7 @@ write_files:
             - sonarqube-db:/var/lib/postgresql/data
 
         sonarqube:
-          image: sonarqube:lts-community
+          image: sonarqube:26.8.0.126808-community
           restart: unless-stopped
           depends_on:
             - sonarqube-db

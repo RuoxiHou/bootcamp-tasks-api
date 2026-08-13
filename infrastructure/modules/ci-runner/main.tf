@@ -4,10 +4,10 @@ locals {
     length(local.admin_source_ip_parts) == 1
     ? format("%s/32", var.admin_source_ip)
     : (
-        local.admin_source_ip_parts[1] == "32" || local.admin_source_ip_parts[0] == cidrhost(var.admin_source_ip, 0)
-        ? var.admin_source_ip
-        : format("%s/32", local.admin_source_ip_parts[0])
-      )
+      local.admin_source_ip_parts[1] == "32" || local.admin_source_ip_parts[0] == cidrhost(var.admin_source_ip, 0)
+      ? var.admin_source_ip
+      : format("%s/32", local.admin_source_ip_parts[0])
+    )
   )
 }
 
@@ -101,11 +101,11 @@ resource "azurerm_linux_virtual_machine" "ci_runner" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init-bootstrap.sh", {
-    admin_username                = var.admin_username
-    github_org                    = var.github_org
-    github_repo                   = var.github_repo
-    key_vault_name                = var.key_vault_name
-    github_runner_pat_secret_name = var.github_runner_pat_secret_name
+    admin_username                    = var.admin_username
+    github_org                        = var.github_org
+    github_repo                       = var.github_repo
+    key_vault_name                    = var.key_vault_name
+    github_runner_pat_secret_name     = var.github_runner_pat_secret_name
     sonarqube_db_password_secret_name = var.sonarqube_db_password_secret_name
   }))
 }
