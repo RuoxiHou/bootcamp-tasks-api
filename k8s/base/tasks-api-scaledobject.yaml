@@ -1,0 +1,61 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+
+metadata:
+  name: tasks-api
+  namespace: ${K8S_NAMESPACE}
+
+spec:
+  scaleTargetRef:
+    name: tasks-api
+
+  pollingInterval: 30
+  cooldownPeriod: 300
+
+  minReplicaCount: 2
+  maxReplicaCount: 30
+
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          selectPolicy: Max
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 60
+            - type: Pods
+              value: 4
+              periodSeconds: 60
+
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          selectPolicy: Min
+          policies:
+            - type: Percent
+              value: 25
+              periodSeconds: 60
+
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        metricName: tasks_api_cpu_utilization
+        threshold: "85"
+        activationThreshold: "55"
+        ignoreNullValues: "false"
+        timeout: "10s"
+        query: >-
+          100 * sum(rate(container_cpu_usage_seconds_total{namespace="${K8S_NAMESPACE}",pod=~"tasks-api-.*",container="tasks-api"}[2m])) / clamp_min(sum(kube_pod_container_resource_requests{namespace="${K8S_NAMESPACE}",pod=~"tasks-api-.*",container="tasks-api",resource="cpu",unit="core"}), 0.001)
+
+    - type: prometheus
+      metadata:
+        serverAddress: http://monitoring-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        metricName: tasks_api_memory_utilization
+        threshold: "85"
+        activationThreshold: "65"
+        ignoreNullValues: "false"
+        timeout: "10s"
+        query: >-
+          100 * sum(container_memory_working_set_bytes{namespace="${K8S_NAMESPACE}",pod=~"tasks-api-.*",container="tasks-api"}) / clamp_min(sum(kube_pod_container_resource_requests{namespace="${K8S_NAMESPACE}",pod=~"tasks-api-.*",container="tasks-api",resource="memory",unit="byte"}), 1)

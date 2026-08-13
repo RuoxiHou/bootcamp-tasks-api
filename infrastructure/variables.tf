@@ -140,6 +140,38 @@ variable "mysql_standby_zone" {
   nullable    = true
 }
 
+variable "alert_smtp_smarthost" {
+  description = "SMTP smarthost used by Alertmanager for email notifications, for example smtp.gmail.com:587."
+  type        = string
+  default     = ""
+}
+
+variable "alert_email_from" {
+  description = "Sender email address used by Alertmanager notifications."
+  type        = string
+  default     = ""
+}
+
+variable "alert_email_address" {
+  description = "Recipient email address for Alertmanager notifications."
+  type        = string
+  default     = ""
+}
+
+variable "alert_smtp_auth_username" {
+  description = "SMTP username for Alertmanager email notifications."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "alert_smtp_auth_password" {
+  description = "SMTP password or app password for Alertmanager email notifications."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "redis_sku" {
   description = "Azure Managed Redis SKU."
   type        = string

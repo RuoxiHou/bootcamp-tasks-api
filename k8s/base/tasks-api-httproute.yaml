@@ -40,6 +40,15 @@ spec:
     - matches:
         - path:
             type: PathPrefix
+            value: /metrics/grafana
+      backendRefs:
+        - name: monitoring-grafana
+          namespace: monitoring
+          port: 80
+
+    - matches:
+        - path:
+            type: PathPrefix
             value: /tasks
 
       backendRefs:
@@ -61,3 +70,21 @@ spec:
       backendRefs:
         - name: tasks-api
           port: 8000
+
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+
+metadata:
+  name: allow-tasks-api-route-to-grafana
+  namespace: monitoring
+
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: default
+  to:
+    - group: ""
+      kind: Service
+      name: monitoring-grafana

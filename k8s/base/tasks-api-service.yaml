@@ -4,6 +4,8 @@ kind: Service
 metadata:
   name: tasks-api
   namespace: ${K8S_NAMESPACE}
+  labels:
+    app: tasks-api
 
 spec:
   type: ClusterIP

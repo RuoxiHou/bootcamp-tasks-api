@@ -214,7 +214,13 @@ module "monitoring" {
   prometheus_storage_size = "10Gi"
   loki_storage_size       = "20Gi"
 
-  grafana_admin_password = var.grafana_admin_password
+  grafana_admin_password   = var.grafana_admin_password
+  grafana_public_url       = "https://api.${module.dns.name}/metrics/grafana"
+  alert_email_address      = var.alert_email_address
+  alert_smtp_smarthost     = var.alert_smtp_smarthost
+  alert_email_from         = var.alert_email_from
+  alert_smtp_auth_username = var.alert_smtp_auth_username
+  alert_smtp_auth_password = var.alert_smtp_auth_password
 }
 
 module "autoscaling" {

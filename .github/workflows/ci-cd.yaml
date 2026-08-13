@@ -15,6 +15,7 @@ env:
   AKS_RESOURCE_GROUP: rg-project3-ruoxi
   AKS_CLUSTER_NAME: project3-aks
   NAMESPACE: default
+  GRAFANA_DASHBOARDS_URL: https://api.ruoxi-projects.space/metrics/grafana/d/tasks-api-observability/tasks-api-observability
 
 jobs:
 
@@ -137,6 +138,7 @@ jobs:
         env:
           TASKS_API_IMAGE: ${{ format('{0}/{1}:{2}', env.ACR_LOGIN_SERVER, env.IMAGE_NAME, github.sha) }}
           K8S_NAMESPACE: ${{ env.NAMESPACE }}
+          GRAFANA_DASHBOARDS_URL: ${{ env.GRAFANA_DASHBOARDS_URL }}
         run: |
           echo "Deploying image:"
           echo "$TASKS_API_IMAGE"

@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 from app.main import redis_client
+from app.metrics import ACTIVE_TASKS_COUNT, TASKS_CREATED_TOTAL
 
 
 def test_health(client):
@@ -49,6 +50,7 @@ def test_create_task(client):
     assert data["description"] == "Created by pytest"
     assert data["done"] is False
     assert data["priority"] == "high"
+    assert TASKS_CREATED_TOTAL.labels(priority="high")._value.get() >= 1
 
 
 def test_get_task(client):
@@ -146,4 +148,27 @@ def test_delete_task(client):
     response = client.get(f"/tasks/{task_id}")
 
     assert response.status_code == 404
+
+
+def test_active_tasks_metric_updates(client):
+    redis_client.get = MagicMock(return_value=None)
+    redis_client.set = MagicMock()
+    redis_client.delete = MagicMock(return_value=0)
+    redis_client.unlink = MagicMock(return_value=0)
+    redis_client.exists = MagicMock(return_value=False)
+
+    client.post(
+        "/tasks",
+        json={
+            "title": "Metric task",
+            "description": "Observe active gauge",
+            "done": False,
+            "priority": "medium",
+        },
+    )
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "active_tasks_count" in response.text
 

@@ -8,15 +8,20 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from prometheus_client import generate_latest
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
+from sqlalchemy import func
 
 try:
     from .redis_client import redis_client
     from .database import Base, get_db, get_engine
     from .models import TaskDB
     from .metrics import (
+        ACTIVE_TASKS_COUNT,
         HTTP_REQUESTS_TOTAL,
         HTTP_REQUEST_DURATION_SECONDS,
+        TASKS_BY_STATUS,
+        TASKS_CREATED_TOTAL,
+        TASKS_TOTAL,
     )
 except ImportError:
     # Allow running as module "main" inside the container image.
@@ -24,8 +29,12 @@ except ImportError:
     from database import Base, get_db, get_engine
     from models import TaskDB
     from metrics import (
+        ACTIVE_TASKS_COUNT,
         HTTP_REQUESTS_TOTAL,
         HTTP_REQUEST_DURATION_SECONDS,
+        TASKS_BY_STATUS,
+        TASKS_CREATED_TOTAL,
+        TASKS_TOTAL,
     )
 
 import logging
@@ -41,6 +50,37 @@ app = FastAPI(
     title="Tasks API",
     description="Bootcamp demo app — Week 1/2/8",
 )
+
+
+def refresh_task_metrics():
+    if os.environ.get("TESTING") == "1":
+        return
+
+    try:
+        engine = get_engine()
+    except KeyError:
+        return
+    except Exception as exc:
+        logger.warning("Failed to initialize database for task metrics: %s", exc)
+        return
+
+    session = None
+    try:
+        session = Session(bind=engine)
+
+        total_tasks = session.query(func.count(TaskDB.id)).scalar() or 0
+        active_tasks = session.query(func.count(TaskDB.id)).filter(TaskDB.done.is_(False)).scalar() or 0
+        completed_tasks = total_tasks - active_tasks
+
+        TASKS_TOTAL.set(total_tasks)
+        ACTIVE_TASKS_COUNT.set(active_tasks)
+        TASKS_BY_STATUS.labels(status="active").set(active_tasks)
+        TASKS_BY_STATUS.labels(status="completed").set(completed_tasks)
+    except Exception as exc:
+        logger.warning("Failed to refresh task metrics: %s", exc)
+    finally:
+        if session is not None:
+            session.close()
 
 
 @app.middleware("http")
@@ -75,7 +115,15 @@ async def metrics_middleware(request: Request, call_next):
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics(request: Request):
+    grafana_dashboards_url = os.environ.get("GRAFANA_DASHBOARDS_URL")
+    accepts = request.headers.get("accept", "")
+
+    if grafana_dashboards_url and "text/html" in accepts:
+        return RedirectResponse(grafana_dashboards_url, status_code=307)
+
+    refresh_task_metrics()
+
     return Response(
         content=generate_latest(),
         media_type="text/plain; version=0.0.4",
@@ -95,6 +143,7 @@ def on_startup():
 
     # Create tables only when a real database is configured.
     Base.metadata.create_all(bind=engine)
+    refresh_task_metrics()
 
 
 def invalidate_tasks_cache():
@@ -198,6 +247,9 @@ def create_task(
     db.commit()
     db.refresh(db_task)
 
+    TASKS_CREATED_TOTAL.labels(priority=db_task.priority or "unspecified").inc()
+    refresh_task_metrics()
+
     # Invalidate cached task list
     invalidate_tasks_cache()
 
@@ -254,6 +306,8 @@ def update_task(
     db.commit()
     db.refresh(db_task)
 
+    refresh_task_metrics()
+
     # Invalidate cached task list
     invalidate_tasks_cache()
 
@@ -281,6 +335,8 @@ def delete_task(
 
     db.delete(db_task)
     db.commit()
+
+    refresh_task_metrics()
 
     # Invalidate cached task list
     invalidate_tasks_cache()

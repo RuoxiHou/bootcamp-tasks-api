@@ -38,3 +38,39 @@ variable "grafana_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "grafana_public_url" {
+  description = "Public URL where Grafana is served, including its subpath"
+  type        = string
+}
+
+variable "alert_email_address" {
+  description = "Email address that should receive Grafana/Alertmanager notifications."
+  type        = string
+}
+
+variable "alert_smtp_smarthost" {
+  description = "SMTP smarthost in host:port format for Alertmanager email delivery."
+  type        = string
+  default     = ""
+}
+
+variable "alert_email_from" {
+  description = "From address used for Alertmanager email notifications."
+  type        = string
+  default     = ""
+}
+
+variable "alert_smtp_auth_username" {
+  description = "SMTP username used by Alertmanager for email delivery."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "alert_smtp_auth_password" {
+  description = "SMTP password used by Alertmanager for email delivery."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

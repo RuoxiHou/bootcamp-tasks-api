@@ -11,8 +11,14 @@ resource "helm_release" "kube_prometheus_stack" {
 
   values = [
     templatefile("${path.module}/values/prometheus-values.yaml.tftpl", {
-      tasks_api_namespace    = var.tasks_api_namespace
-      tasks_api_service_name = var.tasks_api_service_name
+      tasks_api_namespace      = var.tasks_api_namespace
+      tasks_api_service_name   = var.tasks_api_service_name
+      grafana_public_url       = var.grafana_public_url
+      alert_email_address      = var.alert_email_address
+      alert_smtp_smarthost     = var.alert_smtp_smarthost
+      alert_email_from         = var.alert_email_from
+      alert_smtp_auth_username = var.alert_smtp_auth_username
+      alert_smtp_auth_password = var.alert_smtp_auth_password
     })
   ]
 

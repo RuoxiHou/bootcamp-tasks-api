@@ -43,6 +43,7 @@ DNS_ZONE_NAME="$(terraform -chdir="$INFRA_DIR" output -raw dns_zone_name)"
 ACR_LOGIN_SERVER="$(terraform -chdir="$INFRA_DIR" output -raw acr_login_server)"
 TASKS_API_HOSTNAME="api.${DNS_ZONE_NAME}"
 TASKS_API_IMAGE="${TASKS_API_IMAGE:-${ACR_LOGIN_SERVER}/tasks-api:latest}"
+GRAFANA_DASHBOARDS_URL="https://${TASKS_API_HOSTNAME}/metrics/grafana/d/tasks-api-observability/tasks-api-observability"
 
 export KEY_VAULT_NAME
 export WORKLOAD_IDENTITY_CLIENT_ID
@@ -53,6 +54,7 @@ export AZURE_DNS_RESOURCE_GROUP
 export DNS_ZONE_NAME
 export TASKS_API_HOSTNAME
 export TASKS_API_IMAGE
+export GRAFANA_DASHBOARDS_URL
 export K8S_NAMESPACE
 
 if [[ "$DEPLOY_EDGE_RESOURCES" == "true" ]]; then
@@ -76,7 +78,20 @@ envsubst < "$K8S_BASE_DIR/tasks-api-serviceaccount.yaml" | kubectl apply -f -
 envsubst < "$K8S_BASE_DIR/tasks-api-secret-provider.yaml" | kubectl apply -f -
 
 envsubst < "$K8S_BASE_DIR/tasks-api-service.yaml" | kubectl apply -f -
+envsubst < "$K8S_BASE_DIR/tasks-api-pdb.yaml" | kubectl apply -f -
 envsubst < "$K8S_BASE_DIR/tasks-api-deployment.yaml" | kubectl apply -f -
+
+if kubectl get crd scaledobjects.keda.sh >/dev/null 2>&1; then
+  envsubst < "$K8S_BASE_DIR/tasks-api-scaledobject.yaml" | kubectl apply -f -
+else
+  echo "Warning: KEDA CRD 'scaledobjects.keda.sh' not found. Apply infrastructure autoscaling changes first." >&2
+fi
+
+if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1 && kubectl get crd aksnodeclasses.karpenter.azure.com >/dev/null 2>&1; then
+  kubectl apply -f "$K8S_BASE_DIR/nap-default-nodepool.yaml"
+else
+  echo "Warning: AKS NAP/Karpenter CRDs not found. Enable AKS node auto-provisioning before applying NodePool policy." >&2
+fi
 
 if [[ "$DEPLOY_EDGE_RESOURCES" == "true" ]]; then
   kubectl apply -f "$K8S_BASE_DIR/cert-manager-namespace.yaml"
@@ -102,6 +117,10 @@ if [[ "$DEPLOY_EDGE_RESOURCES" == "true" ]]; then
   envsubst < "$K8S_BASE_DIR/cert-manager-certificate.yaml" | kubectl apply -f -
 
   kubectl apply -f "$K8S_BASE_DIR/tasks-api-gateway.yaml"
+  kubectl get namespace monitoring >/dev/null 2>&1 || {
+    echo "Monitoring namespace not found. Apply Terraform monitoring resources first." >&2
+    exit 1
+  }
   envsubst < "$K8S_BASE_DIR/tasks-api-httproute.yaml" | kubectl apply -f -
 
   kubectl apply -f "$K8S_BASE_DIR/external-dns-rbac.yaml"
