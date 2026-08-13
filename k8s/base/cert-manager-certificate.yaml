@@ -8,7 +8,7 @@ spec:
   dnsNames:
     - ${TASKS_API_HOSTNAME}
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-production
     kind: ClusterIssuer
   privateKey:
     algorithm: RSA
