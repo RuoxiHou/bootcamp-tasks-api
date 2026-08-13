@@ -122,17 +122,26 @@ jobs:
           kubectl get nodes
 
       # ----------------------------------------------------------
+      # Install envsubst
+      # ----------------------------------------------------------
+      - name: Install envsubst
+        run: |
+          command -v envsubst || sudo apt-get update && sudo apt-get install -y gettext-base
+
+      # ----------------------------------------------------------
       # Deploy new image
+
+      # Apply the full manifest so replica count and AZ spread stick.
       # ----------------------------------------------------------
       - name: Deploy image to AKS
+        env:
+          TASKS_API_IMAGE: ${{ format('{0}/{1}:{2}', env.ACR_LOGIN_SERVER, env.IMAGE_NAME, github.sha) }}
+          K8S_NAMESPACE: ${{ env.NAMESPACE }}
         run: |
-          IMAGE="$ACR_LOGIN_SERVER/$IMAGE_NAME:${GITHUB_SHA}"
-
           echo "Deploying image:"
-          echo "$IMAGE"
+          echo "$TASKS_API_IMAGE"
 
-          kubectl -n "$NAMESPACE" set image deployment/tasks-api \
-            tasks-api="$IMAGE"
+          envsubst < k8s/base/tasks-api-deployment.yaml | kubectl apply -f -
 
       # ----------------------------------------------------------
       # Wait for rollout
