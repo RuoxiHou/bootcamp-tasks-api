@@ -76,9 +76,10 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
+            -f app/Dockerfile \
             -t "$ACR_LOGIN_SERVER/$IMAGE_NAME:${GITHUB_SHA}" \
             -t "$ACR_LOGIN_SERVER/$IMAGE_NAME:dev" \
-            .
+            app
 
       - name: Push Docker image
         run: |
