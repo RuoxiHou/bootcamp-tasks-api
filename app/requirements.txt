@@ -1,0 +1,22 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+
+# MySQL database
+SQLAlchemy==2.0.43
+PyMySQL==1.1.2
+
+# Redis cache
+redis==6.4.0
+
+# Prometheus metrics
+prometheus-fastapi-instrumentator==7.1.0
+prometheus-client==0.17.1
+
+# JSON structured logging
+python-json-logger==3.3.0
+
+# OpenTelemetry tracing 
+opentelemetry-api==1.36.0
+opentelemetry-sdk==1.36.0
+opentelemetry-instrumentation-fastapi==0.57b0
+opentelemetry-exporter-otlp==1.36.0

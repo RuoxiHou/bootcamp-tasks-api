@@ -1,0 +1,115 @@
+output "resource_group_name" {
+  value = module.resource_group.name
+}
+
+output "vnet_id" {
+  value = module.network.vnet_id
+}
+
+output "aks_name" {
+  value = module.aks.name
+}
+
+output "aks_fqdn" {
+  value = module.aks.fqdn
+}
+
+output "aks_oidc_issuer_url" {
+  value = module.aks.oidc_issuer_url
+}
+
+output "mysql_admin_username" {
+  value = var.mysql_admin_username
+}
+
+output "mysql_fqdn" {
+  value = module.mysql.fqdn
+}
+
+output "mysql_database_name" {
+  value = module.mysql.database_name
+}
+
+output "redis_hostname" {
+  value = module.redis.hostname
+}
+
+output "redis_port" {
+  value = module.redis.port
+}
+
+output "redis_primary_access_key" {
+  value     = module.redis.primary_access_key
+  sensitive = true
+}
+
+output "frontdoor_endpoint_hostname" {
+  value = module.frontdoor.endpoint_hostname
+}
+
+output "key_vault_name" {
+  value = module.keyvault.name
+}
+
+output "key_vault_id" {
+  value = module.keyvault.id
+}
+
+output "key_vault_uri" {
+  value = module.keyvault.vault_uri
+}
+
+output "key_vault_private_endpoint_id" {
+  value = module.keyvault.private_endpoint_id
+}
+
+output "workload_identity_principal_id" {
+  value = module.aks.workload_identity_principal_id
+}
+
+output "workload_identity_client_id" {
+  value = module.aks.workload_identity_client_id
+}
+
+output "tenant_id" {
+  value     = var.tenant_id
+  sensitive = true
+}
+
+output "subscription_id" {
+  value     = var.subscription_id
+  sensitive = true
+}
+
+output "externaldns_client_id" {
+  value = module.aks.externaldns_client_id
+}
+
+output "acr_id" {
+  value = module.acr.id
+}
+
+output "acr_name" {
+  value = module.acr.name
+}
+
+output "acr_login_server" {
+  value = module.acr.login_server
+}
+
+output "dns_zone_name" {
+  value = module.dns.name
+}
+
+output "dns_name_servers" {
+  value = module.dns.name_servers
+}
+
+output "ci_runner_public_ip" {
+  value = module.ci_runner.public_ip_address
+}
+
+output "ci_runner_sonarqube_url" {
+  value = module.ci_runner.sonarqube_url
+}
+

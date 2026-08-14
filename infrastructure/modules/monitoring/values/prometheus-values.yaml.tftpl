@@ -1,0 +1,214 @@
+grafana:
+  enabled: true
+
+  defaultDatasourceEnabled: true
+  isDefaultDatasource: true
+
+  persistence:
+    enabled: true
+    size: 5Gi
+
+  service:
+    type: ClusterIP
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      folderAnnotation: grafana_folder
+    datasources:
+      enabled: true
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: tasks-api
+          orgId: 1
+          folder: Tasks API
+          type: file
+          disableDeletion: false
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/tasks-api
+        - name: tasks-api-business
+          orgId: 1
+          folder: Tasks API Business
+          type: file
+          disableDeletion: false
+          editable: true
+          allowUiUpdates: true
+          options:
+            path: /var/lib/grafana/dashboards/tasks-api-business
+
+  dashboardsConfigMaps:
+    tasks-api: monitoring-grafana-dashboard-tasks-api
+    tasks-api-business: monitoring-grafana-dashboard-tasks-api-business
+
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      jsonData:
+        derivedFields:
+          - name: Pod
+            matcherRegex: 'pod="([^\"]+)"'
+            datasourceUid: prometheus
+            url: '$${__value.raw}'
+
+  grafana.ini:
+    server:
+      root_url: ${grafana_public_url}/
+      serve_from_sub_path: true
+    users:
+      allow_sign_up: false
+    auth.anonymous:
+      enabled: false
+    unified_alerting:
+      enabled: true
+
+prometheus:
+  enabled: true
+
+  additionalServiceMonitors:
+    - name: tasks-api
+      namespaceSelector:
+        matchNames:
+          - ${tasks_api_namespace}
+      selector:
+        matchLabels:
+          app: ${tasks_api_service_name}
+      targetLabels:
+        - app
+      podTargetLabels:
+        - app
+      endpoints:
+        - port: http
+          path: /metrics
+          interval: 15s
+          scrapeTimeout: 10s
+          honorLabels: true
+          filterRunning: true
+
+  prometheusSpec:
+    retention: 15d
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+    podMonitorSelectorNilUsesHelmValues: false
+
+additionalPrometheusRulesMap:
+  tasks-api:
+    groups:
+      - name: tasks-api.rules
+        rules:
+          - alert: TasksApiHighErrorRate
+            expr: |
+              (
+                sum(rate(http_requests_total{job="tasks-api",status=~"5.."}[5m]))
+                /
+                clamp_min(sum(rate(http_requests_total{job="tasks-api"}[5m])), 0.001)
+              ) * 100 > 5
+            for: 10m
+            labels:
+              severity: critical
+              service: tasks-api
+            annotations:
+              summary: Tasks API error rate is high
+              description: 5xx error rate is above 5% for the last 10 minutes.
+
+          - alert: TasksApiHighLatencyP95
+            expr: |
+              histogram_quantile(
+                0.95,
+                sum by (le) (
+                  rate(http_request_duration_seconds_bucket{job="tasks-api",path!="/metrics"}[5m])
+                )
+              ) > 0.75
+            for: 10m
+            labels:
+              severity: warning
+              service: tasks-api
+            annotations:
+              summary: Tasks API p95 latency is high
+              description: p95 request latency is above 750ms for the last 10 minutes.
+
+          - alert: TasksApiUnavailable
+            expr: |
+              min_over_time(up{job="tasks-api"}[5m]) < 1
+            for: 5m
+            labels:
+              severity: critical
+              service: tasks-api
+            annotations:
+              summary: Tasks API is unavailable
+              description: Prometheus could not scrape one or more tasks-api targets for 5 minutes.
+
+alertmanager:
+  enabled: true
+
+  tplConfig: true
+  stringConfig: |
+    global:
+      smtp_smarthost: '${alert_smtp_smarthost}'
+      smtp_from: '${alert_email_from}'
+%{ if alert_smtp_auth_username != "" }
+      smtp_auth_username: '${alert_smtp_auth_username}'
+%{ endif }
+%{ if alert_smtp_auth_password != "" }
+      smtp_auth_password: '${alert_smtp_auth_password}'
+%{ endif }
+    inhibit_rules:
+      - source_matchers:
+          - 'severity = critical'
+        target_matchers:
+          - 'severity =~ warning|info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'severity = warning'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+          - 'alertname'
+      - source_matchers:
+          - 'alertname = InfoInhibitor'
+        target_matchers:
+          - 'severity = info'
+        equal:
+          - 'namespace'
+      - target_matchers:
+          - 'alertname = InfoInhibitor'
+    route:
+      group_by: ['namespace', 'alertname']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: 'ruoxi-email'
+      routes:
+        - receiver: 'null'
+          matchers:
+            - alertname = "Watchdog"
+    receivers:
+      - name: 'null'
+      - name: 'ruoxi-email'
+        email_configs:
+          - to: '${alert_email_address}'
+            send_resolved: true
+    templates:
+      - '/etc/alertmanager/config/*.tmpl'
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+prometheus-node-exporter:
+  hostRootFsMount:
+    enabled: true

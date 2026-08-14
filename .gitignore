@@ -5,3 +5,18 @@ venv/
 .venv/
 *.egg-info/
 dist/
+
+# Terraform local artifacts
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform variable files that often contain secrets
+*.auto.tfvars
+*.auto.tfvars.json

@@ -1,0 +1,212 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "title": "Tasks API Logs",
+      "type": "link",
+      "url": "${grafana_path}/explore?left={\"datasource\":\"${loki_uid}\",\"queries\":[{\"expr\":\"{namespace=\\\"${namespace}\\\",app=\\\"${service_name}\\\"}\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus_uid}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "links": [
+            {
+              "title": "View related logs",
+              "url": "${grafana_path}/explore?left={\"datasource\":\"${loki_uid}\",\"queries\":[{\"expr\":\"{namespace=\\\"${namespace}\\\",app=\\\"${service_name}\\\"}\"}],\"range\":{\"from\":\"now-15m\",\"to\":\"now\"}}"
+            }
+          ],
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(rate(http_requests_total{job=\"${service_name}\",path!=\"/metrics\"}[5m]))",
+          "legendFormat": "request rate",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Request Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "links": [{"title": "View error logs", "url": "${grafana_path}/explore?left={\"datasource\":\"${loki_uid}\",\"queries\":[{\"expr\":\"{namespace=\\\"${namespace}\\\",app=\\\"${service_name}\\\"} |= \\\"ERROR\\\"\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"}], "unit": "percent"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "100 * sum(rate(http_requests_total{job=\"${service_name}\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=\"${service_name}\"}[5m])), 0.001)",
+          "legendFormat": "error rate",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "links": [{"title": "Inspect slow request logs", "url": "${grafana_path}/explore?left={\"datasource\":\"${loki_uid}\",\"queries\":[{\"expr\":\"{namespace=\\\"${namespace}\\\",app=\\\"${service_name}\\\"}\"}],\"range\":{\"from\":\"now-30m\",\"to\":\"now\"}}"}], "unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"${service_name}\",path!=\"/metrics\"}[5m])))",
+          "legendFormat": "p95 latency",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "P95 Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "links": [{"title": "Inspect active task logs", "url": "${grafana_path}/explore?left={\"datasource\":\"${loki_uid}\",\"queries\":[{\"expr\":\"{namespace=\\\"${namespace}\\\",app=\\\"${service_name}\\\"}\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"}]}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "max(active_tasks_count{job=\"${service_name}\"})",
+          "legendFormat": "active tasks",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Active Tasks Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 8},
+      "id": 5,
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (method) (rate(http_requests_total{job=\"${service_name}\",path!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{method}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "HTTP Request Rate by Method",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 8},
+      "id": 6,
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, method) (rate(http_request_duration_seconds_bucket{job=\"${service_name}\",path!=\"/metrics\"}[5m])))",
+          "legendFormat": "{{method}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "P95 Latency by Method",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 17},
+      "id": 7,
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (pod) (rate(http_requests_total{job=\"${service_name}\"}[5m]))",
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Request Rate by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 27},
+      "id": 8,
+      "targets": [{"editorMode": "code", "expr": "sum(increase(tasks_created_total{job=\"${service_name}\"}[$__range]))", "legendFormat": "tasks created", "range": true, "refId": "A"}],
+      "title": "Tasks Created in Selected Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 27},
+      "id": 9,
+      "targets": [{"editorMode": "code", "expr": "max(tasks_total{job=\"${service_name}\"})", "legendFormat": "total tasks", "range": true, "refId": "A"}],
+      "title": "Current Task Total",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${prometheus_uid}"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 27},
+      "id": 10,
+      "targets": [{"editorMode": "code", "expr": "max by (status) (tasks_by_status{job=\"${service_name}\"})", "legendFormat": "{{status}}", "range": true, "refId": "A"}],
+      "title": "Tasks by Status",
+      "type": "piechart"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki_uid}"},
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 35},
+      "id": 11,
+      "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+      "targets": [{"editorMode": "code", "expr": "{namespace=\"${namespace}\",app=\"${service_name}\"}", "queryType": "range", "refId": "A"}],
+      "title": "Recent Application Logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["tasks-api", "observability"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "Tasks API Observability",
+  "uid": "tasks-api-observability",
+  "version": 1
+}
